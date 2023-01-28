@@ -83,38 +83,21 @@ def func_cut_folder(path_folder_to_cut, cut_size_b, disk_name, iteration, window
                 # Если результирующей папки деления с индексом не существует, то создаем ее
                 if not (os.path.isdir(disk_name + name_folder_to_cut + "_" + str(index_folder))):
                     os.makedirs(disk_name + name_folder_to_cut + "_" + str(index_folder))
-                    # print(f"Папка {name_folder_to_cut}_{index_folder} создана")
-                    # window.write_event_value('-THREAD-', f"Папка {name_folder_to_cut}_{index_folder} создана")  # put a message into queue for GUI
                     dict_folder[f"{name_folder_to_cut}_{str(index_folder)}"] = summa
-                # else:
-                # print(f"Папка {name_folder_to_cut}_{index_folder} существует")
-                # window.write_event_value('-THREAD-', f"Папка {name_folder_to_cut}_{index_folder} существует")  # put a message into queue for GUI
 
                 # Если путь это каталог, то в результирущей папке деления создаем этот каталог
                 if (os.path.isdir(path)):
                     dst = disk_name + name_folder_to_cut + "_" + str(index_folder) + "\\" + str(path[(len_path + 1):])
-                    # print(dst)
-                    # window.write_event_value('-THREAD-', dst)  # put a message into queue for GUI
+                    
                     if not (os.path.isdir(dst)):
                         os.makedirs(dst)
-                        # print("Папка назначения создана")
-                        # window.write_event_value('-THREAD-', "Папка назначения создана")  # put a message into queue for GUI
-                    # else:
-                    # print("Папка назначения существует")
-                    # window.write_event_value('-THREAD-', "Папка назначения существует")  # put a message into queue for GUI
+                        
                 # если путь = файл
                 else:
-                    # print(path)
-                    # window.write_event_value('-THREAD-', path)  # put a message into queue for GUI
                     # вычисляем размер файла
                     size = str(os.path.getsize(path))
-                    # print(f'Размер файла вычислен: {int(size)/1048576} МБ')
-                    # window.write_event_value('-THREAD-', f'Размер файла вычислен: {int(size)/1048576} МБ')  # put a message into queue for GUI
-
                     # Если размер файла больше размера деления
                     if (int(size) > cut_size_b):
-                        # print("Файл больше размера деления")
-                        # window.write_event_value('-THREAD-', "Файл больше размера деления")  # put a message into queue for GUI
                         # Создаем каталог больших файлов и копируем файл туда
                         # Если каталога больших фалов не существует, то создаем его
                         if not (os.path.isdir(big_files_folder)):
@@ -129,80 +112,48 @@ def func_cut_folder(path_folder_to_cut, cut_size_b, disk_name, iteration, window
                         shutil.copy2(path, path_to_big)
                         with open(f'{big_files_folder}\\bigfiles_in_folder.csv', 'a') as f1:
                             f1.write(f'{name_folder_to_cut}_big_files\\{path[(len_path + 1):]}\n')
-                        # print("Большой файл скопирован")
-                        # window.write_event_value('-THREAD-', "Большой файл скопирован")  # put a message into queue for GUI
                     else:
                         # Проходим по всем уже ранее созданным папкам деления для дозаписи в них
                         for key, summa in dict_folder.items():
-                            # print(f"Размер папки {key} перед копированием файла: {summa/1048576} МБ")
-                            # window.write_event_value('-THREAD-', f"Размер папки {key} перед копированием файла: {summa/1048576} МБ")  # put a message into queue for GUI
                             summa += int(size)
 
                             # Получаем путь к файлу полный без имени файла
                             tmp_dst = str(path[:path.rfind('\\')])
                             if (summa <= cut_size_b):
-                                # print(f"Размер папки еще меньше {cut_size} Мб = {summa/1048576} МБ")
-                                # window.write_event_value('-THREAD-', f"Размер папки еще меньше {cut_size} Мб = {summa/1048576} МБ")  # put a message into queue for GUI
                                 # путь к папке с файлом для копирования
                                 dst2 = disk_name + key + "\\" + str(tmp_dst[(len_path + 1):])
-                                # print(f"dst2: {dst2}")
-                                # window.write_event_value('-THREAD-', f"dst2: {dst2}")  # put a message into queue for GUI
                                 if not (os.path.isdir(dst2)):
                                     os.makedirs(dst2)
-                                    # print("Папка для копирования файла создана")
-                                    # window.write_event_value('-THREAD-', "Папка для копирования файла создана")  # put a message into queue for GUI
-                                # else:
-                                # print("Папка для копирования файла существует")
-                                # window.write_event_value('-THREAD-', "Папка для копирования файла существует")  # put a message into queue for GUI
+
                                 with open(f'{disk_name}{key}\\files_in_folder.csv', 'a') as f1:
                                     f1.write(f'{key}\\{path[(len_path + 1):]}\n')
                                 shutil.copy2(path, dst2)
-                                # print("Файл скопирован")
-                                # window.write_event_value('-THREAD-', "Файл скопирован")  # put a message into queue for GUI
                                 dict_folder[key] = summa
                                 # устанавливаем флаг true так как была запись файла в одну из папок в словаре
                                 flag_w = True
                                 # прерываем перебор словаря, так как записали файл
                                 break
                             else:
-                                # print(f"файл не помещается в папку {key}")
-                                # window.write_event_value('-THREAD-', f"файл не помещается в папку {key}")  # put a message into queue for GUI
                                 flag_w = False
                                 continue
                         else:
                             if flag_w is False:
-                                # print(f"Размер папки превысил {cut_size} Мб")
-                                # window.write_event_value('-THREAD-', f"Размер папки превысил {cut_size} Мб")  # put a message into queue for GUI
                                 index_folder += 1
                                 if not (os.path.isdir(disk_name + name_folder_to_cut + "_" + str(index_folder))):
                                     os.makedirs(disk_name + name_folder_to_cut + "_" + str(index_folder))
-                                    # print(f"Папка {name_folder_to_cut}_{index_folder} создана")
-                                    # window.write_event_value('-THREAD-', f"Папка {name_folder_to_cut}_{index_folder} создана")  # put a message into queue for GUI
-                                # else:
-                                # print(f"Папка {name_folder_to_cut}_{index_folder} уже существует")
-                                # window.write_event_value('-THREAD-', f"Папка {name_folder_to_cut}_{index_folder} уже существует")  # put a message into queue for GUI
                                 dst3 = disk_name + name_folder_to_cut + "_" + str(index_folder) + "\\" + str(
                                     tmp_dst[(len_path + 1):])
-                                # print(f"dst3: {dst3}")
-                                # window.write_event_value('-THREAD-', f"dst3: {dst3}")  # put a message into queue for GUI
                                 if not (os.path.isdir(dst3)):
                                     os.makedirs(dst3)
-                                    # print("Папка для копирования файла создана")
-                                    # window.write_event_value('-THREAD-', "Папка для копирования файла создана")  # put a message into queue for GUI
-                                # else:
-                                # print("Папка для копирования файла существует")
-                                # window.write_event_value('-THREAD-', "Папка для копирования файла существует")  # put a message into queue for GUI
                                 with open(f'{disk_name}{name_folder_to_cut}_{str(index_folder)}\\files_in_folder.csv',
                                           'a') as f1:
                                     f1.write(f"{name_folder_to_cut}_{str(index_folder)}\\{path[(len_path + 1):]}\n")
                                 shutil.copy2(path, dst3)
-                                # print("Файл скопирован")
-                                # window.write_event_value('-THREAD-', "Файл скопирован")  # put a message into queue for GUI
+
                                 summa = int(size)
                                 dict_folder[f"{name_folder_to_cut}_{str(index_folder)}"] = summa
                 i += 1
                 ii = i / iteration * 100  # Размер текущего заполнения прогресс бара (от 0 до 100)
-                # print(f"итерация: {i}")
                 progress_bar.UpdateBar(ii)
             else:
                 window.write_event_value('-THREAD-END-',
